@@ -1,77 +1,63 @@
-Symfony Standard Edition
+Embed Collection Of Forms
 ========================
 
-**WARNING**: This distribution does not support Symfony 4. See the
-[Installing & Setting up the Symfony Framework][15] page to find a replacement
-that fits you best.
+Here's a link to a youtube video explaining this repository:
+https://youtu.be/nLy7dIQPCUI
 
-Welcome to the Symfony Standard Edition - a fully-functional Symfony
-application that you can use as the skeleton for your new applications.
+Check the timestamps in the description
 
-For details on how to download and get started with Symfony, see the
-[Installation][1] chapter of the Symfony Documentation.
-
-What's inside?
+What this repository contains
 --------------
 
-The Symfony Standard Edition is configured with the following defaults:
-
-  * An AppBundle you can use to start coding;
-
-  * Twig as the only configured template engine;
-
-  * Doctrine ORM/DBAL;
-
-  * Swiftmailer;
-
-  * Annotations enabled for everything.
-
-It comes pre-configured with the following bundles:
-
-  * **FrameworkBundle** - The core Symfony framework bundle
-
-  * [**SensioFrameworkExtraBundle**][6] - Adds several enhancements, including
-    template and routing annotation capability
-
-  * [**DoctrineBundle**][7] - Adds support for the Doctrine ORM
-
-  * [**TwigBundle**][8] - Adds support for the Twig templating engine
-
-  * [**SecurityBundle**][9] - Adds security by integrating Symfony's security
-    component
-
-  * [**SwiftmailerBundle**][10] - Adds support for Swiftmailer, a library for
-    sending emails
-
-  * [**MonologBundle**][11] - Adds support for Monolog, a logging library
-
-  * **WebProfilerBundle** (in dev/test env) - Adds profiling functionality and
-    the web debug toolbar
-
-  * **SensioDistributionBundle** (in dev/test env) - Adds functionality for
-    configuring and working with Symfony distributions
-
-  * [**SensioGeneratorBundle**][13] (in dev env) - Adds code generation
-    capabilities
-
-  * [**WebServerBundle**][14] (in dev env) - Adds commands for running applications
-    using the PHP built-in web server
-
-  * **DebugBundle** (in dev/test env) - Adds Debug and VarDumper component
-    integration
-
-All libraries and bundles included in the Symfony Standard Edition are
-released under the MIT or BSD license.
-
-Enjoy!
-
-[1]:  https://symfony.com/doc/3.4/setup.html
-[6]:  https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html
-[7]:  https://symfony.com/doc/3.4/doctrine.html
-[8]:  https://symfony.com/doc/3.4/templating.html
-[9]:  https://symfony.com/doc/3.4/security.html
-[10]: https://symfony.com/doc/3.4/email.html
-[11]: https://symfony.com/doc/3.4/logging.html
-[13]: https://symfony.com/doc/current/bundles/SensioGeneratorBundle/index.html
-[14]: https://symfony.com/doc/current/setup/built_in_web_server.html
-[15]: https://symfony.com/doc/current/setup.html
+* Configuring your symfony application to  use SQLite instead of Mysql
+* Creating Two entities: User and Exp (means Experience) which are related with the following relationship:
+    * Exp.php
+        * @ORM\ManyToOne(targetEntity="User", inversedBy="exp")
+         * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
+    * User.php:
+        * @ORM\OneToMany(targetEntity="Exp", mappedBy="user", cascade={"persist"})
+        * Also don't forget to set the user in addExp function:
+            ```
+            public function addExp(\AppBundle\Entity\Exp $exp)
+              {
+                  $this->exp[] = $exp;
+                  // setting the current user to the $exp,
+                  // adapt this to whatever you are trying to achieve
+                  $exp->setUser($this);
+                  return $this;
+              }
+            ```
+* Next up, creating the forms from the command-line, pretty straight forward
+    * ExpType.php:
+        * Nothing special about this file
+    * User.php:
+        ```
+       public function buildForm(FormBuilderInterface $builder, array $options)
+           {
+               $builder
+                   ->add('fullname')
+                   // this is the embeded form, the most important things are highlighted at the bottom
+                   ->add('exp', CollectionType::class, [
+                       'entry_type' => ExpType::class,
+                       'entry_options' => [
+                           'label' => false
+                       ],
+                       'by_reference' => false,
+                       // this allows the creation of new forms and the prototype too
+                       'allow_add' => true,
+                       // self explanatory, this one allows the form to be removed
+                       'allow_delete' => true
+                   ])
+                   // just a regular save button to persist the changes
+                   ->add('save', SubmitType::class, [
+                       'attr' => [
+                           'class' => 'btn btn-success'
+                       ]
+                   ])
+               ;
+           }
+        ```
+* Next, sending the form to the view and hadling the form submition
+* Creating the JavaScript file which does most of the work:
+    * Please look up the file in the repository, i cannot put the code here because it's about 80 or 90 lines long
+* And finally persisting the data to the database
